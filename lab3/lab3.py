@@ -3,6 +3,7 @@
 
 from config import *
 from topology import Topology
+import srp
 import pygame
 import random
 from math import sqrt
@@ -68,7 +69,37 @@ def initialize():
     return routers
 
 
+prev_path = []
+
+
 def step(routers):
+    class Streaming:
+        def __init__(self):
+            self.reciever = srp.SrpReceiver(WINDOW_SIZE)
+            self.sender = srp.SrpSender(WINDOW_SIZE, PACKAGE, TIMEOUT)
+
+
+        def progress(self):
+            if self.sender.is_done():
+                return 1.0
+            return  self.sender.ans_count / (self.sender.max_number + 1)
+
+
+        def send_msg(self):
+            if self.sender.send_msg_queue.has_msg():
+                self.reciever.recieve_msg_queue.send_message(self.sender.send_msg_queue.get_message())
+            if self.reciever.send_msg_queue.has_msg():
+                self.sender.recieve_msg_queue.send_message(self.reciever.send_msg_queue.get_message())
+
+
+        def update(self):
+            self.sender.update()
+            self.reciever.update()
+
+
+    global prev_path
+    global stream
+
     for router in routers:
         router.update(1 / FPS)
     topology = Topology()
@@ -83,7 +114,17 @@ def step(routers):
                 topology.add_new_link(j, i)
                 connections.append((i, j))
     paths = topology.get_shortest_ways(SOURCE_INDEX)
-    return connections, paths[DESTINATION_INDEX]
+    path = paths[DESTINATION_INDEX]
+    if len(path) == 0:
+        stream = None
+        return connections, path, 0
+    if len(path) == len(prev_path) and 0 == len([i for i in range(len(path)) if path[i] != prev_path[i]]):
+        stream.update()
+        stream.send_msg()
+    else:
+        prev_path = path
+        stream = Streaming()
+    return connections, path, stream.progress()
 
 
 def render(screen, routers, connections, path, rate=0.0):
@@ -134,7 +175,7 @@ while not done:
     for event in pygame.event.get():
             if event.type == pygame.QUIT:
                     done = True
-    connections, path = step(routers)
-    render(screen, routers, connections, path)
+    connections, path, rate = step(routers)
+    render(screen, routers, connections, path, rate)
     pygame.display.flip()
     clock.tick(FPS)

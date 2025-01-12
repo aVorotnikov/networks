@@ -1,5 +1,8 @@
 {
     "routers_number": 200,
     "distance": 0.25,
-    "max_velocity": 0.15
+    "max_velocity": 0.01,
+    "window_size": 16,
+    "package": 64,
+    "timeout": 0.2
 }

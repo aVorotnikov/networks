@@ -16,3 +16,6 @@ ROUTER_NUMBER = configuration["routers_number"]
 DISTANCE = configuration["distance"]
 DISTANCE_2 = DISTANCE * DISTANCE
 MAX_VELOCITY = configuration["max_velocity"]
+WINDOW_SIZE = configuration["window_size"]
+PACKAGE = configuration["package"]
+TIMEOUT = configuration["timeout"]
