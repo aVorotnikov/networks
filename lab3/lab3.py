@@ -2,9 +2,13 @@
 
 
 from config import *
+from topology import Topology
 import pygame
 import random
 
+
+SOURCE_INDEX = 0
+DESTINATION_INDEX = 1
 
 WIDTH = 800
 HEIGHT = WIDTH
@@ -12,6 +16,7 @@ HEIGHT = WIDTH
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY = (127, 127, 127)
@@ -59,16 +64,37 @@ def initialize():
 def step(routers):
     for router in routers:
         router.update(1 / FPS)
-
-
-def render(screen, routers):
-    screen.fill(BLACK)
+    topology = Topology()
+    for i in range(len(routers)):
+        topology.add_new_node(i)
+    connections = []
     for i in range(len(routers)):
         router = routers[i]
-        pygame.draw.circle(screen, WHITE, to_screen(router.coord), 1)
         for j in range(i):
-            if (is_connected(router, routers[j])):
-                pygame.draw.line(screen, LIGHT_GREY, to_screen(router.coord), to_screen(routers[j].coord))
+            if is_connected(router, routers[j]):
+                topology.add_new_link(i, j)
+                topology.add_new_link(j, i)
+                connections.append((i, j))
+    paths = topology.get_shortest_ways(SOURCE_INDEX)
+    return connections, paths[DESTINATION_INDEX]
+
+
+def render(screen, routers, connections, path):
+    screen.fill(BLACK)
+
+    for connection in connections:
+        pygame.draw.line(screen, LIGHT_GREY, to_screen(routers[connection[0]].coord), to_screen(routers[connection[1]].coord))
+
+    if len(path) != 0:
+        for i in range(len(path) - 1):
+            pygame.draw.line(screen, GREY, to_screen(routers[path[i]].coord), to_screen(routers[path[i + 1]].coord), 3)
+
+    for router in routers:
+        pygame.draw.circle(screen, WHITE, to_screen(router.coord), 1)
+
+    pygame.draw.circle(screen, BLUE, to_screen(routers[SOURCE_INDEX].coord), 5)
+    pygame.draw.circle(screen, YELLOW, to_screen(routers[DESTINATION_INDEX].coord), 5)
+
 
 
 pygame.init()
@@ -82,7 +108,7 @@ while not done:
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                         done = True
-        step(routers)
-        render(screen, routers)
+        connections, path = step(routers)
+        render(screen, routers, connections, path)
         pygame.display.flip()
         clock.tick(FPS)
