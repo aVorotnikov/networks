@@ -1,0 +1,5 @@
+{
+    "routers_number": 100,
+    "distance": 0.25,
+    "max_velocity": 0.2
+}
