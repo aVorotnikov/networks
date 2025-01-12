@@ -18,7 +18,6 @@ HEIGHT = WIDTH
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREY = (127, 127, 127)
@@ -141,9 +140,12 @@ def render(screen, routers, connections, path, rate=0.0):
             dist += dists[-1]
         green_dist = dist * rate
         cur_dist = 0.0
+        not_filled_color = GREY
+        if rate == 0.0:
+            not_filled_color = RED
         for i in range(len(path) - 1):
             if cur_dist >= green_dist:
-                pygame.draw.line(screen, GREY, to_screen(routers[path[i]].coord), to_screen(routers[path[i + 1]].coord), 3)
+                pygame.draw.line(screen, not_filled_color, to_screen(routers[path[i]].coord), to_screen(routers[path[i + 1]].coord), 3)
             elif cur_dist + dists[i] <= green_dist:
                 pygame.draw.line(screen, GREEN, to_screen(routers[path[i]].coord), to_screen(routers[path[i + 1]].coord), 5)
             else:
@@ -153,14 +155,22 @@ def render(screen, routers, connections, path, rate=0.0):
                 coord2 = routers[path[i + 1]].coord
                 coord1 = [alpha2 * coord0[i] + alpha1 * coord2[i] for i in range(2)]
                 pygame.draw.line(screen, GREEN, to_screen(coord0), to_screen(coord1), 5)
-                pygame.draw.line(screen, GREY, to_screen(coord1), to_screen(coord2), 3)
+                pygame.draw.line(screen, not_filled_color, to_screen(coord1), to_screen(coord2), 3)
             cur_dist += dists[i]
 
     for router in routers:
         pygame.draw.circle(screen, WHITE, to_screen(router.coord), 1)
 
-    pygame.draw.circle(screen, BLUE, to_screen(routers[SOURCE_INDEX].coord), 5)
-    pygame.draw.circle(screen, YELLOW, to_screen(routers[DESTINATION_INDEX].coord), 5)
+    source_color = GREEN
+    destination_color = BLUE
+    if rate == 0.0:
+        source_color = RED
+        destination_color = RED
+    elif rate == 1.0:
+        destination_color = GREEN
+
+    pygame.draw.circle(screen, source_color, to_screen(routers[SOURCE_INDEX].coord), 5)
+    pygame.draw.circle(screen, destination_color, to_screen(routers[DESTINATION_INDEX].coord), 5)
 
 
 
